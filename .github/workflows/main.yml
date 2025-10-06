@@ -1,0 +1,38 @@
+name: CI/CD Pipeline
+
+# Trigger workflow on every push to main
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3         # Pulls your code
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20               # Node version
+      - run: npm install                  # Installs dependencies
+      - run: npm run build                # Builds project
+      - run: npm test                     # Runs tests
+
+  deploy:
+    needs: build-and-test                 # Only runs if previous job passes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run build
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-args: "--prod"
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
